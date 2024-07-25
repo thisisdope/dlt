@@ -72,10 +72,7 @@ class _Accessor(abc.ABC):
             traces.append(trace)
             if value is not None:
                 # log trace
-                if is_base_configuration_inner_hint(type_hint):
-                    config: BaseConfiguration = type_hint  # type: ignore
-                else:
-                    config = None
+                config = type_hint if is_base_configuration_inner_hint(type_hint) else None
                 log_traces(config, key, type_hint, value, None, [trace])
                 break
         return value, traces
@@ -87,7 +84,7 @@ class _ConfigAccessor(_Accessor):
     @property
     def config_providers(self) -> Sequence[ConfigProvider]:
         """Return a list of config providers, in lookup order"""
-        return [p for p in self._get_providers_from_context()]
+        return list(self._get_providers_from_context())
 
     @property
     def default_type(self) -> AnyType:

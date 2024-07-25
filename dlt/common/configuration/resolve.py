@@ -110,9 +110,9 @@ def inject_section(
         Iterator[ConfigSectionContext]: Context manager with current section context
     """
     container = Container()
-    existing_context = container[ConfigSectionContext]
-
     if merge_existing:
+        existing_context = container[ConfigSectionContext]
+
         section_context.merge(existing_context)
 
     return container.injectable_context(section_context, lock_context=lock_context)
@@ -282,10 +282,8 @@ def _resolve_config_fields(
         if not is_optional and current_value is None:
             unresolved_fields[key] = traces
         # set resolved value in config
-        if default_value != current_value:
-            if not is_hint_not_resolvable(hint):
-                # ignore final types
-                setattr(config, key, current_value)
+        if default_value != current_value and not is_hint_not_resolvable(hint):
+            setattr(config, key, current_value)
 
     # Check for dynamic hint resolvers which have no corresponding fields
     unmatched_hint_resolvers: List[str] = []
@@ -325,7 +323,6 @@ def _resolve_config_field(
     # contexts must be resolved as a whole
     if is_context_inner_hint(inner_hint):
         pass
-    # if inner_hint is BaseConfiguration then resolve it recursively
     elif is_base_configuration_inner_hint(inner_hint):
         if isinstance(default_value, BaseConfiguration):
             # if default value was instance of configuration, use it as embedded initial
@@ -394,12 +391,10 @@ def _resolve_config_field(
             if value.is_partial() and is_optional:
                 # do not return partially resolved optional embeds
                 value = None
-    else:
-        # if value is resolved, then deserialize and coerce it
-        if value is not None:
-            # do not deserialize explicit values
-            if value is not explicit_value:
-                value = deserialize_value(key, value, inner_hint)
+    elif value is not None:
+        # do not deserialize explicit values
+        if value is not explicit_value:
+            value = deserialize_value(key, value, inner_hint)
 
     return default_value if value is None else value, traces
 
@@ -485,13 +480,11 @@ def resolve_single_provider_value(
         ns = list(explicit_sections)
         # always extend with embedded sections
         ns.extend(embedded_sections)
+    elif pipeline_name:
+        return None, traces
     else:
-        # if provider does not support sections and pipeline name is set then ignore it
-        if pipeline_name:
-            return None, traces
-        else:
-            # pass empty sections
-            ns = []
+        # pass empty sections
+        ns = []
 
     value = None
     while True:

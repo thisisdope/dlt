@@ -14,9 +14,7 @@ from typing import (
     get_args,
     Literal,
     get_origin,
-    List,
 )
-from collections.abc import Mapping as C_Mapping
 
 from dlt.common.json import json
 from dlt.common.typing import AnyType, TAny
@@ -78,12 +76,7 @@ def deserialize_value(key: str, value: Any, hint: Type[TAny]) -> TAny:
 
             # eval only if value is string and hint is "complex"
             if value_dt == "text" and hint_dt == "complex":
-                if hint_origin is tuple:
-                    # use literal eval for tuples
-                    value = ast.literal_eval(value)
-                else:
-                    # use json for sequences and mappings
-                    value = json.loads(value)
+                value = ast.literal_eval(value) if hint_origin is tuple else json.loads(value)
                 # exact types must match
                 if not isinstance(value, hint_origin):
                     raise ValueError(value)

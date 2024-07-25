@@ -90,21 +90,24 @@ class Container:
     ) -> Dict[Type[ContainerInjectableContext], ContainerInjectableContext]:
         if spec.global_affinity:
             return self.main_context
-        else:
             # thread pool names used in dlt contain originating thread id. use this id over pool id
-            if m := re.match(r"dlt-pool-(\d+)-", threading.currentThread().getName()):
-                thread_id = int(m.group(1))
-            else:
-                thread_id = threading.get_ident()
-
-            # return main context for main thread
-            if thread_id == Container._MAIN_THREAD_ID:
-                return self.main_context
-            # we may add a new empty thread context so lock here
-            with Container._LOCK:
-                if (context := self.thread_contexts.get(thread_id)) is None:
-                    context = self.thread_contexts[thread_id] = {}
-                return context
+        thread_id = (
+            int(m.group(1))
+            if (
+                m := re.match(
+                    r"dlt-pool-(\d+)-", threading.currentThread().getName()
+                )
+            )
+            else threading.get_ident()
+        )
+        # return main context for main thread
+        if thread_id == Container._MAIN_THREAD_ID:
+            return self.main_context
+        # we may add a new empty thread context so lock here
+        with Container._LOCK:
+            if (context := self.thread_contexts.get(thread_id)) is None:
+                context = self.thread_contexts[thread_id] = {}
+            return context
 
     def _thread_getitem(
         self, spec: Type[TConfiguration]
@@ -161,15 +164,14 @@ class Container:
             finally:
                 # before setting the previous config for given spec, check if there was no overlapping modification
                 context, current_config = self._thread_getitem(spec)
-                if current_config is config:
-                    # config is injected for spec so restore previous
-                    if previous_config is None:
-                        self._thread_delitem(context, spec)
-                    else:
-                        self._thread_setitem(context, spec, previous_config)
-                else:
+                if current_config is not config:
                     # value was modified in the meantime and not restored
                     raise ContainerInjectableContextMangled(spec, context[spec], config)
+                # config is injected for spec so restore previous
+                if previous_config is None:
+                    self._thread_delitem(context, spec)
+                else:
+                    self._thread_setitem(context, spec, previous_config)
 
     @staticmethod
     def thread_pool_prefix() -> str:
