@@ -54,9 +54,7 @@ class ConnectionStringCredentials(CredentialsConfiguration):
         from dlt.common.configuration.utils import serialize_value
 
         def _serialize_value(v_: Any) -> str:
-            if v_ is None:
-                return None
-            return serialize_value(v_)
+            return None if v_ is None else serialize_value(v_)
 
         # query must be str -> str
         query = {k: _serialize_value(v) for k, v in self.get_query().items()}

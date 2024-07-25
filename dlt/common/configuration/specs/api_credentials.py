@@ -33,13 +33,9 @@ class OAuth2Credentials(CredentialsConfiguration):
 
     def add_scopes(self, scopes: Union[str, List[str]]) -> None:
         if not self.scopes:
-            if isinstance(scopes, str):
-                self.scopes = [scopes]
-            else:
-                self.scopes = scopes
-        else:
-            if isinstance(scopes, str):
-                if scopes not in self.scopes:
-                    self.scopes += [scopes]
-            elif scopes:
-                self.scopes = list(set(self.scopes + scopes))
+            self.scopes = [scopes] if isinstance(scopes, str) else scopes
+        elif isinstance(scopes, str):
+            if scopes not in self.scopes:
+                self.scopes += [scopes]
+        elif scopes:
+            self.scopes = list(set(self.scopes + scopes))

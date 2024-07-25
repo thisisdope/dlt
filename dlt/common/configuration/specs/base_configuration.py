@@ -266,10 +266,7 @@ def configspec(
         return dataclasses.dataclass(cls, init=synth_init, eq=False, repr=False)  # type: ignore
 
     # called with parenthesis
-    if cls is None:
-        return wrap
-
-    return wrap(cls)
+    return wrap if cls is None else wrap(cls)
 
 
 @configspec
@@ -474,9 +471,7 @@ class CredentialsWithDefault:
         self._default_credentials = credentials
 
     def default_credentials(self) -> Any:
-        if self.has_default_credentials():
-            return self._default_credentials
-        return None
+        return self._default_credentials if self.has_default_credentials() else None
 
 
 @configspec

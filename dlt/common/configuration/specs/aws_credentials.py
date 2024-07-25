@@ -64,15 +64,14 @@ class AwsCredentialsWithoutDefaults(CredentialsConfiguration):
             ),
         )
 
-        if "endpoint_url" not in creds:  # AWS S3
-            if "region" not in creds:
-                raise ObjectStoreRsCredentialsException(
-                    "`object_store` Rust crate requires AWS region when using AWS S3."
-                )
-        else:  # S3-compatible, e.g. MinIO
+        if "endpoint_url" in creds:  # S3-compatible, e.g. MinIO
             if self.endpoint_url.startswith("http://"):
                 creds["aws_allow_http"] = "true"
 
+        elif "region" not in creds:
+            raise ObjectStoreRsCredentialsException(
+                "`object_store` Rust crate requires AWS region when using AWS S3."
+            )
         return creds
 
 

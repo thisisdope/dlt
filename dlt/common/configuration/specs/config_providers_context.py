@@ -19,7 +19,6 @@ from dlt.common.configuration.specs import (
     configspec,
     known_sections,
 )
-from dlt.common.runtime.exec_info import is_airflow_installed
 
 
 @configspec
@@ -88,12 +87,11 @@ class ConfigProvidersContext(ContainerInjectableContext):
 
 
 def _initial_providers() -> List[ConfigProvider]:
-    providers = [
+    return [
         EnvironProvider(),
         SecretsTomlProvider(add_global_config=True),
         ConfigTomlProvider(add_global_config=True),
     ]
-    return providers
 
 
 def _extra_providers() -> List[ConfigProvider]:
