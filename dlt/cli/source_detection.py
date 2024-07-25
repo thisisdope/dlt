@@ -27,15 +27,16 @@ def find_call_arguments_to_replace(
             for t_arg_name, t_value in replace_nodes:
                 dn_node: ast.AST = args.arguments.get(t_arg_name)
                 if dn_node is not None:
-                    if not isinstance(dn_node, ast.Constant) or not isinstance(dn_node.value, str):
+                    if not isinstance(dn_node, ast.Constant) or not isinstance(
+                        dn_node.value, str
+                    ):
                         raise CliCommandException(
                             "init",
                             f"The pipeline script {init_script_name} must pass the {t_arg_name} as"
                             f" string to '{arg_name}' function in line {dn_node.lineno}",
                         )
-                    else:
-                        transformed_nodes.append((dn_node, ast.Constant(value=t_value, kind=None)))
-                        replaced_args.add(t_arg_name)
+                    transformed_nodes.append((dn_node, ast.Constant(value=t_value, kind=None)))
+                    replaced_args.add(t_arg_name)
 
     # there was at least one replacement
     for t_arg_name, _ in replace_nodes:
@@ -52,22 +53,18 @@ def find_call_arguments_to_replace(
 def find_source_calls_to_replace(
     visitor: PipelineScriptVisitor, pipeline_name: str
 ) -> List[Tuple[ast.AST, ast.AST]]:
-    transformed_nodes: List[Tuple[ast.AST, ast.AST]] = []
-    for source_def in visitor.known_sources_resources.values():
-        # append function name to be replaced
-        transformed_nodes.append(
-            (
-                creates_func_def_name_node(source_def, visitor.source_lines),
-                ast.Name(id=pipeline_name + "_" + source_def.name),
-            )
+    transformed_nodes: List[Tuple[ast.AST, ast.AST]] = [
+        (
+            creates_func_def_name_node(source_def, visitor.source_lines),
+            ast.Name(id=f"{pipeline_name}_{source_def.name}"),
         )
-
+        for source_def in visitor.known_sources_resources.values()
+    ]
     for calls in visitor.known_sources_resources_calls.values():
-        for call in calls:
-            transformed_nodes.append(
-                (call.func, ast.Name(id=pipeline_name + "_" + unparse(call.func)))
-            )
-
+        transformed_nodes.extend(
+            (call.func, ast.Name(id=f"{pipeline_name}_{unparse(call.func)}"))
+            for call in calls
+        )
     return transformed_nodes
 
 
@@ -100,8 +97,10 @@ def detect_source_configs(
 
                 if val_store is not None:
                     # we are sure that all resources come from single file so we can put them in single section
-                    val_store[source_name + ":" + field_name] = WritableConfigValue(
-                        field_name, field_type, None, section
+                    val_store[f"{source_name}:{field_name}"] = (
+                        WritableConfigValue(
+                            field_name, field_type, None, section
+                        )
                     )
 
     return required_secrets, required_config, checked_sources

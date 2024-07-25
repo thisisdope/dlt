@@ -256,14 +256,8 @@ def find_conflict_files(
         return hashlib.sha3_256(file_blob).hexdigest() != entry["sha3_256"]
 
     for file, entry in remote_new.items():
-        if dest_storage.has_file(file):
-            # if incoming file is different from local
-            if is_file_modified(file, entry):
-                conflict_modified.append(file)
-        else:
-            # file is new local and remote
-            pass
-
+        if dest_storage.has_file(file) and is_file_modified(file, entry):
+            conflict_modified.append(file)
     for file, entry in remote_modified.items():
         if dest_storage.has_file(file):
             # if local file was changes and it is different from incoming
@@ -275,11 +269,6 @@ def find_conflict_files(
 
     conflict_deleted: List[str] = []
     for file, entry in remote_deleted.items():
-        if dest_storage.has_file(file):
-            if is_file_modified(file, entry):
-                conflict_deleted.append(file)
-        else:
-            # file deleted locally and on remote -> ok
-            pass
-
+        if dest_storage.has_file(file) and is_file_modified(file, entry):
+            conflict_deleted.append(file)
     return conflict_modified, conflict_deleted

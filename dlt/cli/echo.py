@@ -34,15 +34,15 @@ def warning_style(msg: str) -> str:
 
 
 def error(msg: str) -> None:
-    click.secho("ERROR: " + msg, fg="red")
+    click.secho(f"ERROR: {msg}", fg="red")
 
 
 def warning(msg: str) -> None:
-    click.secho("WARNING: " + msg, fg="yellow")
+    click.secho(f"WARNING: {msg}", fg="yellow")
 
 
 def note(msg: str) -> None:
-    click.secho("NOTE: " + msg, fg="green")
+    click.secho(f"NOTE: {msg}", fg="green")
 
 
 def confirm(text: str, default: Optional[bool] = None) -> bool:

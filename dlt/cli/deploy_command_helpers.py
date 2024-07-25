@@ -145,13 +145,13 @@ class BaseDeployment(abc.ABC):
                 # use script name to derive pipeline name
                 if not self.pipeline_name:
                     self.pipeline_name = dlt.config.get("pipeline_name")
-                    if not self.pipeline_name:
-                        self.pipeline_name = get_default_pipeline_name(self.pipeline_script_path)
-                        fmt.warning(
-                            f"Using default pipeline name {self.pipeline_name}. The pipeline name"
-                            " is not passed as argument to dlt.pipeline nor configured via config"
-                            " provides ie. config.toml"
-                        )
+                if not self.pipeline_name:
+                    self.pipeline_name = get_default_pipeline_name(self.pipeline_script_path)
+                    fmt.warning(
+                        f"Using default pipeline name {self.pipeline_name}. The pipeline name"
+                        " is not passed as argument to dlt.pipeline nor configured via config"
+                        " provides ie. config.toml"
+                    )
                 # fmt.echo("Generating deployment for pipeline %s" % fmt.bold(self.pipeline_name))
 
                 # attach to pipeline name, get state and trace
@@ -184,17 +184,15 @@ class BaseDeployment(abc.ABC):
                     )
                 )
                 # fmt.echo(f"{resolved_value.key}:{resolved_value.value}{type(resolved_value.value)} in {resolved_value.sections} is SECRET")
-            else:
-                # move all config values that are not in config.toml into env
-                if resolved_value.provider_name != self.config_prov.name:
-                    self.envs.append(
-                        LookupTrace(
-                            self.env_prov.name,
-                            tuple(resolved_value.sections),
-                            resolved_value.key,
-                            resolved_value.value,
-                        )
+            elif resolved_value.provider_name != self.config_prov.name:
+                self.envs.append(
+                    LookupTrace(
+                        self.env_prov.name,
+                        tuple(resolved_value.sections),
+                        resolved_value.key,
+                        resolved_value.value,
                     )
+                )
                     # fmt.echo(f"{resolved_value.key} in {resolved_value.sections} moved to CONFIG")
 
     def _echo_secrets(self) -> None:
@@ -275,13 +273,12 @@ def parse_pipeline_info(visitor: PipelineScriptVisitor) -> List[Tuple[str, Optio
                         f" determined from {unparse(f_r_node).strip()}. We assume that you know"
                         " what you are doing :)"
                     )
-                if f_r_value is True:
-                    if fmt.confirm(
-                        "The value of 'dev_mode' or 'full_refresh' is set to True. Do you want to"
-                        " abort to set it to False?",
-                        default=True,
-                    ):
-                        raise CliCommandException("deploy", "Please set the dev_mode to False")
+                if f_r_value is True and fmt.confirm(
+                                        "The value of 'dev_mode' or 'full_refresh' is set to True. Do you want to"
+                                        " abort to set it to False?",
+                                        default=True,
+                                    ):
+                    raise CliCommandException("deploy", "Please set the dev_mode to False")
 
             p_d_node = call_args.arguments.get("pipelines_dir")
             if p_d_node:
@@ -378,11 +375,8 @@ def generate_pip_freeze(requirements_blacklist: List[str], requirements_file_nam
 
 def github_origin_to_url(origin: str, path: str) -> str:
     # repository origin must end with .git
-    if origin.endswith(".git"):
-        origin = origin[:-4]
-    if origin.startswith("git@github.com:"):
-        origin = origin[15:]
-
+    origin = origin.removesuffix(".git")
+    origin = origin.removeprefix("git@github.com:")
     if not origin.startswith(GITHUB_URL):
         origin = GITHUB_URL + origin
     # https://github.com/dlt-hub/data-loading-zoomcamp.git

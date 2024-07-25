@@ -156,10 +156,7 @@ class GithubActionDeployment(BaseDeployment):
         assert last_workflow_step["run"] == "python pipeline.py"
         # must run in the directory of the script
         wf_run_path, wf_run_name = os.path.split(self.repo_pipeline_script_path)
-        if wf_run_path:
-            run_cd_cmd = f"cd '{wf_run_path}' && "
-        else:
-            run_cd_cmd = ""
+        run_cd_cmd = f"cd '{wf_run_path}' && " if wf_run_path else ""
         last_workflow_step["run"] = f"{run_cd_cmd}python '{wf_run_name}'"
 
         return workflow
@@ -362,45 +359,33 @@ class AirflowDeployment(BaseDeployment):
         )
         if len(self.secret_envs) == 0 and len(self.envs) == 0:
             fmt.echo("3. Your pipeline does not seem to need any secrets.")
+        elif self.secrets_format == SecretFormats.env.value:
+            fmt.echo(
+                "3. Add the following secret values (typically stored in %s): \n%s\n%s\nin"
+                " ENVIRONMENT VARIABLES using Google Composer UI"
+                % (
+                    fmt.bold(make_dlt_settings_path(SECRETS_TOML)),
+                    fmt.bold(
+                        "\n".join(
+                            self.env_prov.get_key_name(s_v.key, *s_v.sections)
+                            for s_v in self.secret_envs
+                        )
+                    ),
+                    fmt.bold(
+                        "\n".join(
+                            self.env_prov.get_key_name(v.key, *v.sections) for v in self.envs
+                        )
+                    ),
+                )
+            )
+            fmt.echo()
+            # if fmt.confirm("Do you want to list the environment variables in the format suitable for Airflow?", default=True):
+            self._echo_secrets()
+            self._echo_envs()
+        elif self.secrets_format == SecretFormats.toml.value:
+            self._extracted_from__echo_instructions_73()
         else:
-            if self.secrets_format == SecretFormats.env.value:
-                fmt.echo(
-                    "3. Add the following secret values (typically stored in %s): \n%s\n%s\nin"
-                    " ENVIRONMENT VARIABLES using Google Composer UI"
-                    % (
-                        fmt.bold(make_dlt_settings_path(SECRETS_TOML)),
-                        fmt.bold(
-                            "\n".join(
-                                self.env_prov.get_key_name(s_v.key, *s_v.sections)
-                                for s_v in self.secret_envs
-                            )
-                        ),
-                        fmt.bold(
-                            "\n".join(
-                                self.env_prov.get_key_name(v.key, *v.sections) for v in self.envs
-                            )
-                        ),
-                    )
-                )
-                fmt.echo()
-                # if fmt.confirm("Do you want to list the environment variables in the format suitable for Airflow?", default=True):
-                self._echo_secrets()
-                self._echo_envs()
-            elif self.secrets_format == SecretFormats.toml.value:
-                # build toml
-                fmt.echo(
-                    "3. Add the following toml-string in the Google Composer UI as the"
-                    f" {SECRETS_TOML_KEY} variable."
-                )
-                fmt.echo()
-                toml_provider = StringTomlProvider("")
-                for s_v in self.secret_envs:
-                    toml_provider.set_value(s_v.key, s_v.value, None, *s_v.sections)
-                for s_v in self.envs:
-                    toml_provider.set_value(s_v.key, s_v.value, None, *s_v.sections)
-                fmt.echo(toml_provider.dumps())
-            else:
-                raise ValueError(self.secrets_format)
+            raise ValueError(self.secrets_format)
 
         fmt.echo("4. Add dlt package below using Google Composer UI.")
         fmt.echo(fmt.bold(self.artifacts["requirements_txt"]))
@@ -435,3 +420,18 @@ class AirflowDeployment(BaseDeployment):
         fmt.echo("c. Push changes to github. Use your Git UI or the following command")
         fmt.echo(fmt.bold("git push origin"))
         fmt.echo("6. You should see your pipeline in Airflow.")
+
+    # TODO Rename this here and in `_echo_instructions`
+    def _extracted_from__echo_instructions_73(self):
+        # build toml
+        fmt.echo(
+            "3. Add the following toml-string in the Google Composer UI as the"
+            f" {SECRETS_TOML_KEY} variable."
+        )
+        fmt.echo()
+        toml_provider = StringTomlProvider("")
+        for s_v in self.secret_envs:
+            toml_provider.set_value(s_v.key, s_v.value, None, *s_v.sections)
+        for s_v in self.envs:
+            toml_provider.set_value(s_v.key, s_v.value, None, *s_v.sections)
+        fmt.echo(toml_provider.dumps())

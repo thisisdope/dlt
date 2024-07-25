@@ -3,7 +3,6 @@ import ast
 import shutil
 from types import ModuleType
 from typing import Dict, List, Sequence, Tuple
-from importlib.metadata import version as pkg_version
 
 from dlt.common import git
 from dlt.common.configuration.paths import get_dlt_settings_dir, make_dlt_settings_path
@@ -151,43 +150,41 @@ def _welcome_message(
 ) -> None:
     fmt.echo()
     if source_files.is_template:
-        fmt.echo("Your new pipeline %s is ready to be customized!" % fmt.bold(source_name))
         fmt.echo(
-            "* Review and change how dlt loads your data in %s"
-            % fmt.bold(source_files.dest_pipeline_script)
+            f"Your new pipeline {fmt.bold(source_name)} is ready to be customized!"
+        )
+        fmt.echo(
+            f"* Review and change how dlt loads your data in {fmt.bold(source_files.dest_pipeline_script)}"
         )
     else:
         if is_new_source:
-            fmt.echo("Verified source %s was added to your project!" % fmt.bold(source_name))
+            fmt.echo(f"Verified source {fmt.bold(source_name)} was added to your project!")
             fmt.echo(
-                "* See the usage examples and code snippets to copy from %s"
-                % fmt.bold(source_files.dest_pipeline_script)
+                f"* See the usage examples and code snippets to copy from {fmt.bold(source_files.dest_pipeline_script)}"
             )
         else:
             fmt.echo(
-                "Verified source %s was updated to the newest version!" % fmt.bold(source_name)
+                f"Verified source {fmt.bold(source_name)} was updated to the newest version!"
             )
 
     if is_new_source:
         fmt.echo(
-            "* Add credentials for %s and other secrets in %s"
-            % (fmt.bold(destination_type), fmt.bold(make_dlt_settings_path(SECRETS_TOML)))
+            f"* Add credentials for {fmt.bold(destination_type)} and other secrets in {fmt.bold(make_dlt_settings_path(SECRETS_TOML))}"
         )
 
     if dependency_system:
-        fmt.echo("* Add the required dependencies to %s:" % fmt.bold(dependency_system))
+        fmt.echo(f"* Add the required dependencies to {fmt.bold(dependency_system)}:")
         compiled_requirements = source_files.requirements.compiled()
         for dep in compiled_requirements:
-            fmt.echo("  " + fmt.bold(dep))
+            fmt.echo(f"  {fmt.bold(dep)}")
         fmt.echo(
-            "  If the dlt dependency is already added, make sure you install the extra for %s to it"
-            % fmt.bold(destination_type)
+            f"  If the dlt dependency is already added, make sure you install the extra for {fmt.bold(destination_type)}"
+            f" to it"
         )
         if dependency_system == utils.REQUIREMENTS_TXT:
             qs = "' '"
             fmt.echo(
-                "  To install with pip: %s"
-                % fmt.bold(f"pip3 install '{qs.join(compiled_requirements)}'")
+                f"""  To install with pip: {fmt.bold(f"pip3 install '{qs.join(compiled_requirements)}'")}"""
             )
         elif dependency_system == utils.PYPROJECT_TOML:
             fmt.echo("  If you are using poetry you may issue the following command:")
@@ -201,24 +198,22 @@ def _welcome_message(
 
     if is_new_source:
         fmt.echo(
-            "* Read %s for more information"
-            % fmt.bold("https://dlthub.com/docs/walkthroughs/create-a-pipeline")
+            f'* Read {fmt.bold("https://dlthub.com/docs/walkthroughs/create-a-pipeline")} for more information'
         )
     else:
         fmt.echo(
-            "* Read %s for more information"
-            % fmt.bold("https://dlthub.com/docs/walkthroughs/add-a-verified-source")
+            f'* Read {fmt.bold("https://dlthub.com/docs/walkthroughs/add-a-verified-source")} for more information'
         )
 
 
 def list_verified_sources_command(repo_location: str, branch: str = None) -> None:
-    fmt.echo("Looking up for verified sources in %s..." % fmt.bold(repo_location))
+    fmt.echo(f"Looking up for verified sources in {fmt.bold(repo_location)}...")
     for source_name, source_files in _list_verified_sources(repo_location, branch).items():
         reqs = source_files.requirements
         dlt_req_string = str(reqs.dlt_requirement_base)
-        msg = "%s: %s" % (fmt.bold(source_name), source_files.doc)
+        msg = f"{fmt.bold(source_name)}: {source_files.doc}"
         if not reqs.is_installed_dlt_compatible():
-            msg += fmt.warning_style(" [needs update: %s]" % (dlt_req_string))
+            msg += fmt.warning_style(f" [needs update: {dlt_req_string}]")
         fmt.echo(msg)
 
 
@@ -296,7 +291,7 @@ def init_command(
     else:
         if not is_valid_schema_name(source_name):
             raise InvalidSchemaName(source_name)
-        dest_pipeline_script = source_name + ".py"
+        dest_pipeline_script = f"{source_name}.py"
         source_files = VerifiedSourceFiles(
             True,
             init_storage,
@@ -355,17 +350,6 @@ def init_command(
             " pipeline with dlt.pipeline. Please initialize pipeline explicitly in init scripts.",
         )
 
-    # find all arguments in all calls to replace
-    transformed_nodes = source_detection.find_call_arguments_to_replace(
-        visitor,
-        [
-            ("destination", destination_type),
-            ("pipeline_name", source_name),
-            ("dataset_name", source_name + "_data"),
-        ],
-        source_files.pipeline_script,
-    )
-
     # inspect the script
     inspect_pipeline_script(
         source_files.storage.storage_path,
@@ -381,7 +365,7 @@ def init_command(
             [
                 ("destination", destination_type),
                 ("pipeline_name", source_name),
-                ("dataset_name", source_name + "_data"),
+                ("dataset_name", f"{source_name}_data"),
             ],
             source_files.pipeline_script,
         )
@@ -422,7 +406,7 @@ def init_command(
         )
 
     # add destination spec to required secrets
-    required_secrets["destinations:" + destination_type] = WritableConfigValue(
+    required_secrets[f"destinations:{destination_type}"] = WritableConfigValue(
         destination_type, destination_spec, None, ("destination",)
     )
     # add the global telemetry to required config

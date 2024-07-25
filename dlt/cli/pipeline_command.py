@@ -274,16 +274,15 @@ def pipeline_command(
             p.drop_pending_packages(with_partial_loads=True)
             fmt.echo("Pending packages deleted")
 
-    if operation == "sync":
-        if fmt.confirm(
-            "About to drop the local state of the pipeline and reset all the schemas. The"
-            " destination state, data and schemas are left intact. Proceed?",
-            default=False,
-        ):
-            fmt.echo("Dropping local state")
-            p = p.drop()
-            fmt.echo("Restoring from destination")
-            p.sync_destination()
+    if operation == "sync" and fmt.confirm(
+                "About to drop the local state of the pipeline and reset all the schemas. The"
+                " destination state, data and schemas are left intact. Proceed?",
+                default=False,
+            ):
+        fmt.echo("Dropping local state")
+        p = p.drop()
+        fmt.echo("Restoring from destination")
+        p.sync_destination()
 
     if operation == "load-package":
         load_id = command_kwargs.get("load_id")

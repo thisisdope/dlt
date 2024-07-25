@@ -45,7 +45,7 @@ DEBUG_FLAG = False
 
 def on_exception(ex: Exception, info: str) -> None:
     click.secho(str(ex), err=True, fg="red")
-    fmt.note("Please refer to %s for further assistance" % fmt.bold(info))
+    fmt.note(f"Please refer to {fmt.bold(info)} for further assistance")
     if DEBUG_FLAG:
         raise ex
 
@@ -108,13 +108,13 @@ def deploy_command_wrapper(
         return -2
     except InvalidGitRepositoryError:
         click.secho(
-            "No git repository found for pipeline script %s." % fmt.bold(pipeline_script_path),
+            f"No git repository found for pipeline script {fmt.bold(pipeline_script_path)}.",
             err=True,
             fg="red",
         )
         fmt.note("If you do not have a repository yet, you can do either of:")
         fmt.note(
-            "- Run the following command to initialize new repository: %s" % fmt.bold("git init")
+            f'- Run the following command to initialize new repository: {fmt.bold("git init")}'
         )
         fmt.note(
             "- Add your local code to Github as described here: %s"
@@ -122,7 +122,9 @@ def deploy_command_wrapper(
                 "https://docs.github.com/en/get-started/importing-your-projects-to-github/importing-source-code-to-github/adding-locally-hosted-code-to-github"
             )
         )
-        fmt.note("Please refer to %s for further assistance" % fmt.bold(DLT_DEPLOY_DOCS_URL))
+        fmt.note(
+            f"Please refer to {fmt.bold(DLT_DEPLOY_DOCS_URL)} for further assistance"
+        )
         return -3
     except NoSuchPathError as path_ex:
         click.secho("The pipeline script does not exist\n%s" % str(path_ex), err=True, fg="red")
@@ -143,8 +145,8 @@ def pipeline_command_wrapper(
     except CannotRestorePipelineException as ex:
         click.secho(str(ex), err=True, fg="red")
         click.secho(
-            "Try command %s to restore the pipeline state from destination"
-            % fmt.bold(f"dlt pipeline {pipeline_name} sync")
+            f'Try command {fmt.bold(f"dlt pipeline {pipeline_name} sync")} to restore the pipeline state '
+            f'from destination'
         )
         return -1
     except Exception as ex:
@@ -590,14 +592,12 @@ def main() -> int:
     elif args.command == "init":
         if args.list_verified_sources:
             return list_verified_sources_command_wrapper(args.location, args.branch)
-        else:
-            if not args.source or not args.destination:
-                init_cmd.print_usage()
-                return -1
-            else:
-                return init_command_wrapper(
-                    args.source, args.destination, args.generic, args.location, args.branch
-                )
+        if args.source and args.destination:
+            return init_command_wrapper(
+                args.source, args.destination, args.generic, args.location, args.branch
+            )
+        init_cmd.print_usage()
+        return -1
     elif args.command == "deploy":
         try:
             deploy_args = vars(args)

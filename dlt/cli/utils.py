@@ -48,8 +48,7 @@ def ensure_git_command(command: str) -> None:
             raise
         raise CliCommandException(
             command,
-            "'git' command is not available. Install and setup git with the following the guide %s"
-            % "https://docs.github.com/en/get-started/quickstart/set-up-git",
+            "'git' command is not available. Install and setup git with the following the guide https://docs.github.com/en/get-started/quickstart/set-up-git",
             imp_ex,
         ) from imp_ex
 

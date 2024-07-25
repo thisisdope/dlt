@@ -16,10 +16,10 @@ DLT_TELEMETRY_DOCS_URL = "https://dlthub.com/docs/reference/telemetry"
 
 def telemetry_status_command() -> None:
     if get_telemetry_status():
-        fmt.echo("Telemetry is %s" % fmt.bold("ENABLED"))
-        fmt.echo("Anonymous id %s" % fmt.bold(get_anonymous_id()))
+        fmt.echo(f'Telemetry is {fmt.bold("ENABLED")}')
+        fmt.echo(f"Anonymous id {fmt.bold(get_anonymous_id())}")
     else:
-        fmt.echo("Telemetry is %s" % fmt.bold("DISABLED"))
+        fmt.echo(f'Telemetry is {fmt.bold("DISABLED")}')
 
 
 def change_telemetry_status_command(enabled: bool) -> None:
@@ -39,9 +39,9 @@ def change_telemetry_status_command(enabled: bool) -> None:
     write_values(config._toml, telemetry_value, overwrite_existing=True)
     config.write_toml()
     if enabled:
-        fmt.echo("Telemetry switched %s" % fmt.bold("ON"))
+        fmt.echo(f'Telemetry switched {fmt.bold("ON")}')
     else:
-        fmt.echo("Telemetry switched %s" % fmt.bold("OFF"))
+        fmt.echo(f'Telemetry switched {fmt.bold("OFF")}')
     # reload config providers
     ctx = Container()[ConfigProvidersContext]
     ctx.providers = ConfigProvidersContext.initial_providers()
