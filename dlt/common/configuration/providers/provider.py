@@ -41,10 +41,9 @@ class ConfigProvider(abc.ABC):
 def get_key_name(key: str, separator: str, /, *sections: str) -> str:
     if sections:
         sections = filter(lambda x: bool(x), sections)  # type: ignore
-        env_key = separator.join((*sections, key))
+        return separator.join((*sections, key))
     else:
-        env_key = key
-    return env_key
+        return key
 
 
 class ConfigProviderException(ConfigurationException):

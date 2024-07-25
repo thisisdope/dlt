@@ -21,7 +21,7 @@ class ContextProvider(ConfigProvider):
     def get_value(
         self, key: str, hint: Type[Any], pipeline_name: str = None, *sections: str
     ) -> Tuple[Optional[Any], str]:
-        assert sections == ()
+        assert not sections
 
         # only context is a valid hint
         with contextlib.suppress(KeyError, TypeError):

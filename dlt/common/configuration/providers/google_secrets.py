@@ -29,8 +29,7 @@ def normalize_key(in_string: str) -> str:
     # Strip punctuation from the string
     stripped_text = in_string.translate(translator)
     whitespace = re.compile(r"\s+")
-    stripped_whitespace = whitespace.sub("", stripped_text)
-    return stripped_whitespace
+    return whitespace.sub("", stripped_text)
 
 
 class GoogleSecretsProvider(VaultTomlProvider):
@@ -56,8 +55,7 @@ class GoogleSecretsProvider(VaultTomlProvider):
         """
         key = normalize_key(key)
         normalized_sections = [normalize_key(section) for section in sections if section]
-        key_name = get_key_name(normalize_key(key), "-", *normalized_sections)
-        return key_name
+        return get_key_name(normalize_key(key), "-", *normalized_sections)
 
     @property
     def name(self) -> str:
@@ -80,8 +78,7 @@ class GoogleSecretsProvider(VaultTomlProvider):
         try:
             response = client.projects().secrets().versions().access(name=resource_name).execute()
             secret_value = response["payload"]["data"]
-            decoded_value = base64.b64decode(secret_value).decode("utf-8")
-            return decoded_value
+            return base64.b64decode(secret_value).decode("utf-8")
         except HttpError as error:
             error_doc = json.loadb(error.content)["error"]
             if error.resp.status == 404:
